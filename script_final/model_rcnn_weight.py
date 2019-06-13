@@ -30,7 +30,7 @@ def test():
     from params import DsbConfig
     config = DsbConfig()
     model = UnetRCNN('all', 0.1, 'sgd', config, '..//cache')
-    
+
     filepath = '/home/work/dsb/cache/mask_rcnn_coco.h5'
     model.load_weights(filepath, by_name=True)
 
@@ -46,7 +46,7 @@ class cbk(Callback):
         val_loss = logs['val_loss']
         if val_loss>6:
             self.model.stop_training=True
-    
+
 class BatchNorm(KL.BatchNormalization):
     """Batch Normalization class. Subclasses the Keras BN class and
     hardcodes training=False so the BN layer doesn't update
@@ -189,7 +189,7 @@ def smooth_l1_loss(y_true, y_pred):
 def C1_graph(input_image, ksize=1, depth=1):
     x = input_image
     for nb_depth in range(depth):
-        x = KL.Conv2D(256, (ksize, ksize), name='head_C1_{}_conv1'.format(nb_depth), use_bias=True, 
+        x = KL.Conv2D(256, (ksize, ksize), name='head_C1_{}_conv1'.format(nb_depth), use_bias=True,
                       padding='same')(x)
         x = BatchNorm(axis=3, name='head_C1_{}_bn_conv1'.format(nb_depth))(x)
         x = KL.Activation('relu')(x)
@@ -247,7 +247,7 @@ class UnetRCNN():
         # Returns a list of the last layers of each stage, 5 in total.
         # Don't create the thead (stage 5), so we pick the 4th item in the list.
         _, C2, C3, C4, C5 = resnet_graph(input_image, "resnet101", stage5=True)
-     
+
         #C1 = C1_graph(input_image, ksize=config.C1_KSIZE, depth=config.C1_DEPTH)
         # Top-down Layers
         # TODO: add assert to varify feature map sizes match what's in config
@@ -263,20 +263,20 @@ class UnetRCNN():
             KL.Conv2D(256, (1, 1), name='fpn_c2p2')(C2)])
 
         '''
-        for nb_p1 in range(2):    
+        for nb_p1 in range(2):
             P2 = KL.Conv2DTranspose(256, (2, 2), strides=(2, 2), activation="relu",
                                name="head_fpn_p2ct_{}".format(nb_p1))(P2)
         P1 = KL.Add(name="head_fpn_p1add")([P2,
             KL.Conv2D(256, (1, 1), name = 'head_fpn_c1p1')(C1)])
         # Attach 3x3 conv to all P layers to get the final feature maps.
-        
+
         P1 = KL.Conv2D(256, (1, 1), padding="SAME", activation='relu',
                        name="head_fpn_p1")(P1)
         '''
         P2 = KL.Conv2D(256, (3, 3), padding="SAME", name="fpn_p2")(P2)
-        
+
         P2_true = KL.Conv2D(256, (3, 3), padding="SAME", activation='relu',
-                            name="fpn_p2_true_conv0")(P2)          
+                            name="fpn_p2_true_conv0")(P2)
         output_y_true = KL.Conv2D(1, (1, 1), activation='tanh', name='output_y_true_conv')(P2_true)
         output_x_true = KL.Conv2D(1, (1, 1), activation='tanh', name='output_x_true_conv')(P2_true)
         output_dr_true= KL.Conv2D(1, (1, 1), activation='tanh', name='output_dr_true_conv')(P2_true)
@@ -290,11 +290,11 @@ class UnetRCNN():
         output_x_true = KL.Concatenate(name='output_x_true')([output_x_true, weight_true])
         output_dr_true= KL.Concatenate(name='output_dr_true')([output_dr_true, weight_true])
         output_dl_true = KL.Concatenate(name='output_dl_true')([output_dl_true, weight_true])
-        
+
         P2_pred = KL.Conv2D(256, (3, 3), padding="SAME", activation='relu',
-                            name="fpn_p2_pred_conv0")(P2)            
-        output_mask = KL.Conv2D(1, (1, 1), activation='sigmoid', 
-                                name='output_mask')(P2_pred)    
+                            name="fpn_p2_pred_conv0")(P2)
+        output_mask = KL.Conv2D(1, (1, 1), activation='sigmoid',
+                                name='output_mask')(P2_pred)
         output_y = KL.Conv2D(1, (1, 1), activation='tanh', name='output_y_conv')(P2_pred)
         output_x = KL.Conv2D(1, (1, 1), activation='tanh', name='output_x_conv')(P2_pred)
         output_dr= KL.Conv2D(1, (1, 1), activation='tanh', name='output_dr_conv')(P2_pred)
@@ -312,14 +312,14 @@ class UnetRCNN():
         output_lx = KL.Concatenate(name='output_lx')([output_lx, weight])
         output_ldr= KL.Concatenate(name='output_ldr')([output_ldr, weight])
         output_ldl = KL.Concatenate(name='output_ldl')([output_ldl, weight])
-        
-        output_inst = [output_y_true, output_x_true, output_dr_true, output_dl_true, 
-                       output_y, output_x, output_dr, output_dl, 
+
+        output_inst = [output_y_true, output_x_true, output_dr_true, output_dl_true,
+                       output_y, output_x, output_dr, output_dl,
                        output_ly,output_lx,output_ldr,output_ldl]
         #output_inst =[output_ly, output_lx, output_ldr, output_ldl][self.nb_start:
          #               self.nb_start+self.nb_feature]
-    
-        model = KM.Model(inputs=[input_image, weight_true], 
+
+        model = KM.Model(inputs=[input_image, weight_true],
                          outputs=[output_mask]+ output_inst)
 
         if config.GPU_COUNT > 1:
@@ -343,13 +343,13 @@ class UnetRCNN():
         if self.opt=='adam':
             opt = keras.optimizers.Adam(learning_rate)
         elif self.opt =='sgd':
-            opt = keras.optimizers.SGD(lr=learning_rate, 
+            opt = keras.optimizers.SGD(lr=learning_rate,
                                        momentum=self.config.LEARNING_MOMENTUM,
                                        clipnorm=5.0)
-        self.keras_model.compile(optimizer=opt, loss=loss, 
-                      metrics = metrics, 
-                      loss_weights = loss_weights)           
-        
+        self.keras_model.compile(optimizer=opt, loss=loss,
+                      metrics = metrics,
+                      loss_weights = loss_weights)
+
     def load_weights(self, filepath, by_name=False, exclude=None, verbose=1):
         """Modified version of the correspoding Keras function with
         the addition of multi-GPU support and the ability to exclude
@@ -357,8 +357,8 @@ class UnetRCNN():
         exlude: list of layer names to excluce
         """
         import h5py
-        from keras.engine import topology
-        
+        from keras.engine import saving
+
         if verbose==1:
             self.logger.log('loading weights form {}'.format(filepath))
         if exclude:
@@ -381,9 +381,9 @@ class UnetRCNN():
             layers = filter(lambda l: l.name not in exclude, layers)
 
         if by_name:
-            topology.load_weights_from_hdf5_group_by_name(f, layers)
+            saving.load_weights_from_hdf5_group_by_name(f, layers)
         else:
-            topology.load_weights_from_hdf5_group(f, layers)
+            saving.load_weights_from_hdf5_group(f, layers)
         if hasattr(f, 'close'):
             f.close()
 
@@ -461,14 +461,14 @@ class UnetRCNN():
         callbacks = [
             keras.callbacks.TensorBoard(log_dir=self.fold_dir,
                                         histogram_freq=0, write_graph=True, write_images=False),
-            keras.callbacks.ModelCheckpoint(os.path.join(self.fold_dir, '{epoch:2d}_'+'{val_loss:.4f}.hdf5'), 
-                                            monitor='val_loss', save_best_only = True, 
+            keras.callbacks.ModelCheckpoint(os.path.join(self.fold_dir, '{epoch:2d}_'+'{val_loss:.4f}.hdf5'),
+                                            monitor='val_loss', save_best_only = True,
                                             verbose=1, save_weights_only=True),
-            keras.callbacks.EarlyStopping(monitor='val_loss', patience=5, verbose=1), 
+            keras.callbacks.EarlyStopping(monitor='val_loss', patience=5, verbose=1),
             keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor = 0.1, patience=3,
                                               verbose = 1),
-            #cbk(self.fold_dir)                                  
-        ] + clbcks 
+            #cbk(self.fold_dir)
+        ] + clbcks
 
         # Train
         self.logger.log("\nLR={}\n".format(learning_rate))

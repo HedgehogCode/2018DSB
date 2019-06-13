@@ -18,7 +18,7 @@ def main():
     df_name = 'stage2_df'
     save_name = 'stage2'
     ###################################################################################
-    weight_dir = '/home/work/data/dsb/cache/UnetRCNN_180410-221747'
+    weight_dir = '../cache/UnetRCNN_180410-221747'
     #correct directory address where model weight for prediction is saved
     ##################################################################################
     predict_test_rcnn(df_name, weight_dir)
@@ -37,12 +37,12 @@ def main():
             save_to_cache(preds_df, fl)
             for fl in fls:
                 os.remove(fl)
-                
-                
+
+
     get_mask(df_name, config, weight_dir, save_name)
     get_mask_scale(df_name, config, weight_dir, save_name, tag='half')
     get_mask_scale(df_name, config, weight_dir, save_name, tag='quarter')
-    
+
     get_mask_scale(df_name, config, weight_dir, save_name, tag='two')
 
 
@@ -51,6 +51,6 @@ def main():
     get_cons_scale(df_name, weight_dir, tag='half')
     get_cons_scale(df_name, weight_dir, tag='quarter')
     get_cons_scale(df_name, weight_dir, tag='two')
-if __name__ == '__main__': 
+if __name__ == '__main__':
     main()
 
