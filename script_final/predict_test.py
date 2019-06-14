@@ -405,28 +405,14 @@ def get_cons(df_name, weight_dir, n_jobs = 18):
 
 def get_cons_scale(df_name, weight_dir, tag='half', n_jobs=18):
     fl_name = os.path.join(weight_dir, '{}_{}'.format(df_name, tag))
-    if tag!='two':
-        preds_df = load_from_cache(fl_name)
-    else:
-        fl_names = glob.glob(os.path.join(weight_dir, '{}_{}'.format(df_name, tag),
-                                          '{}_{}_[0-9+].dat'.format(df_name, tag)))+\
-                   glob.glob(os.path.join(weight_dir, '{}_{}'.format(df_name, tag),
-                                          '{}_{}_[0-9][0-9].dat'.format(df_name, tag)))
-        preds_df = load_from_cache_multi(os.path.join(weight_dir,
-                                                      '{}_{}'.format(df_name, tag),
-                                                      '{}_{}'.format(df_name, tag)),
-                   nb=len(fl_names))
+    preds_df = load_from_cache(fl_name)
     print(preds_df.shape)
     cons_total = Parallel(n_jobs)(delayed(get_cons_local_valid)(preds_df.loc[ind, 'pred_scale'],
                          np.concatenate(preds_df.loc[ind, ['mask','ly','lx','ldr','ldl']], -1))
                             for ind in preds_df.index)
     preds_df['con'] = cons_total
-    if tag!='two':
-        save_to_cache(preds_df, os.path.join(weight_dir, '{}_{}'.format(df_name, tag)))
-    else:
-        save_to_cache_multi(preds_df, os.path.join(weight_dir,
-                                                   '{}_{}'.format(df_name, tag),
-                                                   '{}_{}'.format(df_name, tag)),10)
+    save_to_cache(preds_df, os.path.join(weight_dir, '{}_{}'.format(df_name, tag)))
+
 def get_mask_scale(df_name, config, weight_dir, save_name, tag='half', n_jobs=18):
     fl_name = os.path.join(weight_dir, df_name+'_'+tag)
     if os.path.exists('{}.dat'.format(fl_name)):
@@ -458,11 +444,7 @@ def get_mask_scale(df_name, config, weight_dir, save_name, tag='half', n_jobs=18
                       interpolation=cv2.INTER_NEAREST) for ind in df.index)
     preds_df['pred'] = [x.astype('int16') for x in masks]
 
-    if tag!='two':
-        save_to_cache(preds_df, os.path.join(weight_dir, '{}_{}'.format(df_name, tag)))
-    else:
-        save_to_cache_multi(preds_df, os.path.join(weight_dir, '{}_{}'.format(df_name, tag),
-                                             '{}_{}'.format(df_name, tag)),10)
+    save_to_cache(preds_df, os.path.join(weight_dir, '{}_{}'.format(df_name, tag)))
 
 
 

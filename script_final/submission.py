@@ -72,15 +72,6 @@ def main():
         if tag is None:
             fl = os.path.join(weight_dir, '{}.dat'.format(df_name))
             pred = load_file(fl)
-        elif tag == 'two':
-            fl_names = glob.glob(os.path.join(weight_dir, '{}_{}'.format(df_name, tag),
-                                              '{}_{}_[0-9+].dat'.format(df_name, tag)))+\
-                       glob.glob(os.path.join(weight_dir, '{}_{}'.format(df_name, tag),
-                                              '{}_{}_[0-9][0-9].dat'.format(df_name, tag)))
-            pred = load_from_cache_multi(os.path.join(weight_dir,
-                                                          '{}_{}'.format(df_name, tag),
-                                                          '{}_{}'.format(df_name, tag)),
-                       nb=len(fl_names))
         else:
             fl = os.path.join(weight_dir, '{}_{}.dat'.format(df_name,tag))
             pred = load_file(fl)

@@ -27,16 +27,16 @@ def main():
     predict_test_rcnn_two(df_name, weight_dir)
 
     #combine predictions for zoom 2
-    for nb in range(25):
-        fl = os.path.join(weight_dir, 'stage2_df_two_{}.dat'.format(nb))
-        if os.path.exists(fl):
-            continue
-        else:
-            fls = glob.glob(os.path.join(weight_dir, 'stage2_df_two_{}_*.dat'.format(nb)))
-            preds_df = load_from_cache_multi(fl[:-4], len(fls))
-            save_to_cache(preds_df, fl)
-            for fl in fls:
-                os.remove(fl)
+    # for nb in range(25):
+    #     fl = os.path.join(weight_dir, 'stage2_df_two_{}.dat'.format(nb))
+    #     if os.path.exists(fl):
+    #         continue
+    #     else:
+    #         fls = glob.glob(os.path.join(weight_dir, 'stage2_df_two_{}_*.dat'.format(nb)))
+    #         preds_df = load_from_cache_multi(fl[:-4], len(fls))
+    #         save_to_cache(preds_df, fl)
+    #         for fl in fls:
+    #             os.remove(fl)
 
 
     get_mask(df_name, config, weight_dir, save_name)
